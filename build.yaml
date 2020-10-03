@@ -1,0 +1,9 @@
+builders:
+  build_license_collector:
+    import: 'package:build_license_collector/builder.dart'
+    builder_factories: [createBuilder]
+    build_extensions:
+      "$lib$":
+        - licenses.g.dart
+    auto_apply: root_package
+    build_to: source
