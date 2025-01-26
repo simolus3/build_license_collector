@@ -3,7 +3,11 @@ builders:
     import: 'package:build_license_collector/builder.dart'
     builder_factories: [createBuilder]
     build_extensions:
-      "$lib$":
-        - licenses.g.dart
+      "$package$":
+        - lib/licenses.g.dart
+    defaults:
+      options:
+        include_dev_dependencies: false
+        output: "lib/licenses.g.dart"
     auto_apply: root_package
     build_to: source
