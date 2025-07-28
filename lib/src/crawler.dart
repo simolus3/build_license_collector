@@ -46,14 +46,15 @@ class LicenseCrawler {
   }
 
   Future<String> licenseOf(String package) async {
-    // todo: Try variations like LICENSE.md, LICENSE.txt?
-    final licenseId = AssetId(package, 'LICENSE');
+    for (final files in ['LICENSE', 'LICENSE.md', 'LICENSE.txt']) {
+      final licenseId = AssetId(package, files);
 
-    if (await reader.canRead(licenseId)) {
-      return reader.readAsString(licenseId);
-    } else {
-      log.warning('Could not find a license for package $package.');
-      return 'unknown license';
+      if (await reader.canRead(licenseId)) {
+        return reader.readAsString(licenseId);
+      }
     }
+
+    log.warning('Could not find a license for package $package.');
+    return 'unknown license';
   }
 }
