@@ -115,6 +115,6 @@ final class ModuleLibrary {
     );
   }
 
-  static List<AssetId> _deserializeAssetIds(Iterable serlialized) =>
+  static List<AssetId> _deserializeAssetIds(Iterable<Object?> serlialized) =>
       serlialized.map((decoded) => AssetId.parse(decoded as String)).toList();
 }
