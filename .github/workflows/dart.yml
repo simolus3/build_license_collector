@@ -11,6 +11,8 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    outputs:
+      dart: ${{ steps.output.outputs.dart }}
 
     steps:
       - uses: actions/checkout@v5
