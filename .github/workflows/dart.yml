@@ -65,7 +65,7 @@ jobs:
       - name: Save Dart version for matching test run
         id: output
         run: |
-          echo "${{ matrix.dart-sdk }}=${{ steps.dart.outputs.dart-version }}" >> $GITHUB_OUTPUT
+          echo "dart=${{ steps.dart.outputs.dart-version }}" >> $GITHUB_OUTPUT
 
   test:
     strategy:
@@ -81,8 +81,6 @@ jobs:
         if: runner.os == 'Windows'
       - uses: actions/checkout@v5
       - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: ${{ matrix.dart-sdk }}
       - name: "Setup local pub cache folder"
         run: "echo PUB_CACHE=.dart_tool/pub-cache/ >> $GITHUB_ENV"
         shell: bash
