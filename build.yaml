@@ -4,10 +4,12 @@ builders:
     builder_factories: [createBuilder]
     build_extensions:
       "$package$":
-        - lib/licenses.g.dart
+        - lib/src/licenses.json
+    required_inputs:
+      - .module.library
     defaults:
       options:
-        include_dev_dependencies: false
-        output: "lib/licenses.g.dart"
-    auto_apply: root_package
+        output: "lib/src/licenses.g.dart"
+        entrypoints: web/*.dart
+    auto_apply: dependents
     build_to: source

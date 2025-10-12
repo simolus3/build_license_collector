@@ -1,8 +1,5 @@
 import 'dart:convert';
 
-import 'package:dart_style/dart_style.dart';
-import 'package:pub_semver/pub_semver.dart';
-
 String writeLicencesJson(Map<String, String> licenses) {
   final licenseTextToIndex = <String, int>{};
   final licenseTexts = <String>[];
@@ -19,9 +16,11 @@ String writeLicencesJson(Map<String, String> licenses) {
   });
 }
 
-String writeLicensesDart(Map<String, String> licenses,
-    {required Version languageVersion}) {
-  final buffer = StringBuffer('// Auto-generated. Do not edit by hand \n');
+String writeLicensesDart(Map<String, String> licenses) {
+  final buffer = StringBuffer('''
+// dart format off
+// Auto-generated. Do not edit by hand
+''');
 
   // Write a constant for each unique license in licenses.values
   final licenseTextToIndex = <String, int>{};
@@ -50,8 +49,7 @@ String writeLicensesDart(Map<String, String> licenses,
   }
   buffer.write('};');
 
-  return DartFormatter(languageVersion: languageVersion)
-      .format(buffer.toString());
+  return buffer.toString();
 }
 
 extension on String {

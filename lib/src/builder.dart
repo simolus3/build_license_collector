@@ -1,44 +1,34 @@
 import 'package:build/build.dart';
-import 'package:pub_semver/pub_semver.dart';
+import 'package:glob/glob.dart';
 
 import 'crawler.dart';
 import 'generator.dart';
 
 Builder createBuilder(BuilderOptions options) {
   return LicenseCollectingBuilder(
-    includeDevDependencies: options.config['include_dev_dependencies'] as bool,
     outputPath: options.config['output'] as String,
+    entrypoints: Glob(options.config['entrypoints'] as String),
   );
 }
 
 class LicenseCollectingBuilder extends Builder {
-  final bool includeDevDependencies;
   final String outputPath;
+  final Glob entrypoints;
 
   LicenseCollectingBuilder(
-      {required this.includeDevDependencies, required this.outputPath});
+      {required this.outputPath, required this.entrypoints});
 
   @override
   Future<void> build(BuildStep buildStep) async {
     final crawler = LicenseCrawler.forStep(buildStep);
-    final licenseByPackage = await crawler.collectLicenses(
-        includeDevDependencies: includeDevDependencies);
+    final licenseByPackage = await crawler.collectLicenses(entrypoints);
 
     final outputId = buildStep.allowedOutputs.single;
     String output;
     if (outputId.extension == '.json') {
       output = writeLicencesJson(licenseByPackage);
     } else {
-      final packageConfig = await buildStep.packageConfig;
-      final languageVersion = packageConfig.packages
-          .singleWhere((e) => e.name == buildStep.inputId.package)
-          .languageVersion;
-
-      output = writeLicensesDart(
-        licenseByPackage,
-        languageVersion: Version(
-            languageVersion?.major ?? 3, languageVersion?.minor ?? 6, 0),
-      );
+      output = writeLicensesDart(licenseByPackage);
     }
 
     await buildStep.writeAsString(outputId, output);
