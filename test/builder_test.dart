@@ -54,6 +54,30 @@ void main() {
         makeAssetId('a|.dart_tool/build/generated/a/web/licenses.json')));
     expect(output['packages'].keys, unorderedEquals([r'$sdk', 'a', 'b', 'c']));
   });
+
+  test('handles platform-specific imports', () async {
+    final result = await testBuilders(
+      [
+        moduleLibraryBuilder(BuilderOptions({})),
+        _licenseBuilder(output: 'web/licenses.json'),
+      ],
+      {
+        'a|web/a.dart': '''
+import 'package:b/b.dart'
+  if (dart.library.js_interop) 'package:c/c.dart';
+''',
+        'b|lib/b.dart': '',
+        'b|LICENSE': "B LICENSE",
+        'c|lib/c.dart': '',
+        'c|LICENSE': "C LICENSE",
+      },
+      rootPackage: 'a',
+    );
+
+    final output = json.decode(result.readerWriter.testing.readString(
+        makeAssetId('a|.dart_tool/build/generated/a/web/licenses.json')));
+    expect(output['packages'].keys, unorderedEquals([r'$sdk', 'a', 'c']));
+  });
 }
 
 Builder _licenseBuilder(
@@ -62,5 +86,6 @@ Builder _licenseBuilder(
   return createBuilder(BuilderOptions({
     'output': output,
     'entrypoints': entrypoints,
+    'dart': ['js_interop', 'js_interop_unsafe'],
   }));
 }

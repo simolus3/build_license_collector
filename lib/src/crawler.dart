@@ -12,12 +12,13 @@ import 'package:path/path.dart' as p;
 /// Dart program and collect licenses from imported packages and the SDK.
 class LicenseCrawler {
   final AssetReader reader;
-  final String rootPackage;
+  final List<String> availableDartLibraries;
 
-  LicenseCrawler(this.reader, this.rootPackage);
+  LicenseCrawler(this.reader, this.availableDartLibraries);
 
-  factory LicenseCrawler.forStep(BuildStep step) {
-    return LicenseCrawler(step, step.inputId.package);
+  factory LicenseCrawler.forStep(
+      BuildStep step, List<String> availableDartLibraries) {
+    return LicenseCrawler(step, availableDartLibraries);
   }
 
   Future<ModuleLibrary?> _libraryForSource(AssetId id) async {
@@ -34,8 +35,18 @@ class LicenseCrawler {
 
   Iterable<AssetId> _dependencies(ModuleLibrary library) sync* {
     yield* library.deps;
+    outer:
     for (final conditional in library.conditionalDeps) {
-      yield* conditional.values;
+      for (final available in availableDartLibraries) {
+        if (conditional['dart.library.$available'] case final import?) {
+          yield import;
+          continue outer;
+        }
+      }
+
+      if (conditional[r'$default'] case final defaultImport?) {
+        yield defaultImport;
+      }
     }
   }
 

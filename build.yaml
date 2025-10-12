@@ -11,5 +11,17 @@ builders:
       options:
         output: "lib/src/licenses.g.dart"
         entrypoints: web/*.dart
+        dart:
+          - _internal
+          - _js_annotations
+          - async
+          - collection
+          - convert
+          - core
+          - developer
+          - js_interop
+          - js_interop_unsafe
+          - math
+          - typed_data
     auto_apply: dependents
     build_to: source
