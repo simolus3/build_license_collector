@@ -6,6 +6,10 @@ repository: https://github.com/simolus3/build_license_collector
 environment:
   sdk: '>=3.6.0 <4.0.0'
 
+topics:
+  - builder
+  - license
+
 dependencies:
   build: ^4.0.0
   build_modules: ^5.0.18

@@ -1,0 +1,103 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  schedule:
+    # Make sure everything is still working by running the CI weekly.
+    - cron: "0 5 * * 1"
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dart-lang/setup-dart@v1
+        id: dart
+      - name: "Setup local pub cache folder"
+        # Make pub cache folder consistent across OSes, so that we can share the cache.
+        run: "echo PUB_CACHE=.dart_tool/pub-cache/ >> $GITHUB_ENV"
+        shell: bash
+      # We need to update the cache whenever the pubspec.lock changes, as that
+      # indicates a changed dependency after `pub upgrade`. However, we can't
+      # include the pubspec.lock in the cache key as it's not part of the repository.
+      # So, we explicitly restore from and update to the cache as needed.
+      - uses: actions/cache/restore@v4
+        id: restore
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            pubspec.lock
+          key: dart-deps-${{ steps.dart.outputs.dart-version }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys:
+            dart-deps-${{ steps.dart.outputs.dart-version }}
+            dart-deps-
+          enableCrossOsArchive: true
+
+      - name: "Hash pubspec lockfiles before pub upgrade"
+        id: deps-before
+        run: |
+          echo "lockfiles=${{ hashFiles('**/pubspec.lock') }}" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: "Install dependencies"
+        run: dart pub upgrade
+
+      - name: "Ensure formatted"
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: "Analyze project"
+        run: dart analyze --fatal-infos
+
+      - name: "Update cache due to changed pubspec.lock"
+        if: ${{ hashFiles('**/pubspec.lock') != steps.deps-before.outputs.lockfiles || !steps.restore.outputs.cache-hit }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            pubspec.lock
+          key: dart-deps-${{ steps.dart.outputs.dart-version }}-${{ hashFiles('pubspec.yaml') }}
+          enableCrossOsArchive: true
+
+      # This allows the test matrix to depend on a matching output from this matrix invocation, see
+      # https://github.com/orgs/community/discussions/26639#discussioncomment-3949595
+      - name: Save Dart version for matching test run
+        id: output
+        run: |
+          echo "${{ matrix.dart-sdk }}=${{ steps.dart.outputs.dart-version }}" >> $GITHUB_OUTPUT
+
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        dart-sdk: ${{ needs.analyze.outputs.* }}
+    runs-on: ${{ matrix.os }}
+    # analyze creates the cache, avoid downloading dependencies again here
+    needs: analyze
+
+    steps:
+      - run: git config --global core.autocrlf false
+        if: runner.os == 'Windows'
+      - uses: actions/checkout@v5
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.dart-sdk }}
+      - name: "Setup local pub cache folder"
+        run: "echo PUB_CACHE=.dart_tool/pub-cache/ >> $GITHUB_ENV"
+        shell: bash
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            pubspec.lock
+          key: dart-deps-${{ matrix.dart-sdk }}-${{ hashFiles('pubspec.yaml') }}
+          # Should be created by analyze run
+          fail-on-cache-miss: true
+          enableCrossOsArchive: true
+
+      - name: "Get dependencies"
+        run: dart pub get --offline
+
+      - name: "Run tests"
+        run: dart test
