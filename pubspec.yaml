@@ -1,6 +1,6 @@
 name: build_license_collector
 description: Collects licenses from your dependencies with build_runner
-version: 2.0.0
+version: 2.0.1
 repository: https://github.com/simolus3/build_license_collector
 
 environment:
