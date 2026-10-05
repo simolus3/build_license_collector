@@ -1,3 +1,7 @@
+## 2.0.2
+
+- Replace `build_modules` dependency with `build_web_compilers`.
+
 ## 2.0.1
 
 - Fix resolving `LICENSE` file for some Dart SDK installations.

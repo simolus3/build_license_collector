@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:build/build.dart';
-import 'package:build_modules/build_modules.dart';
 import 'package:cli_util/cli_util.dart';
 import 'package:glob/glob.dart';
 import 'package:graphs/graphs.dart';
@@ -24,8 +23,7 @@ class LicenseCrawler {
   Future<ModuleLibrary?> _libraryForSource(AssetId id) async {
     String read;
     try {
-      read =
-          await reader.readAsString(id.changeExtension(moduleLibraryExtension));
+      read = await reader.readAsString(id.changeExtension('.module.library'));
     } on AssetNotFoundException {
       return null;
     }
@@ -77,22 +75,25 @@ class LicenseCrawler {
       // We can use raw dart:io APIs here to read the license file since an SDK
       // change invalidates the entire build.
       final root = sdkPath;
-      final paths = [
-        p.join(root, 'LICENSE'),
-        // On homebrew, root is /opt/homebrew/Cellar/dart/3.11.0/libexec. But
-        // the LICENSE file is one directory further up.
-        p.join(p.dirname(root), 'LICENSE'),
-      ];
 
-      for (final path in paths) {
-        final file = File(path);
-        if (await file.exists()) {
-          return file.readAsString();
+      if (root != null) {
+        final paths = [
+          p.join(root, 'LICENSE'),
+          // On homebrew, root is /opt/homebrew/Cellar/dart/3.11.0/libexec. But
+          // the LICENSE file is one directory further up.
+          p.join(p.dirname(root), 'LICENSE'),
+        ];
+
+        for (final path in paths) {
+          final file = File(path);
+          if (await file.exists()) {
+            return file.readAsString();
+          }
         }
-      }
 
-      throw StateError(
-          'Could not find LICENSE file for Dart SDK (tried ${paths.join(', ')}).');
+        throw StateError(
+            'Could not find LICENSE file for Dart SDK (tried ${paths.join(', ')}).');
+      }
     }
 
     for (final files in ['LICENSE', 'LICENSE.md', 'LICENSE.txt']) {

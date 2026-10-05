@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:build/build.dart';
 import 'package:build_license_collector/builder.dart';
-import 'package:build_modules/builders.dart';
+import 'package:build_web_compilers/builders.dart';
 import 'package:build_test/build_test.dart';
 import 'package:test/test.dart';
 
